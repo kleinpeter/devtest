@@ -8,6 +8,7 @@ use App\Application\CommandResult;
 use App\Domain\Barbershop\Entity\Booking;
 use App\Domain\Barbershop\Entity\Service;
 use App\Domain\Barbershop\Entity\Stylist;
+use App\Domain\Barbershop\Exception\SlotUnavailableException;
 use App\Domain\Barbershop\Repository\BookingRepositoryInterface;
 use App\Domain\ValueObject\UuidFactory;
 use DateTimeImmutable;
@@ -32,6 +33,10 @@ final class CreateBookingCommandHandler
 
         $start = new DateTimeImmutable($command->startTime);
         $end   = $start->modify("+{$service->getDurationMinutes()} minutes");
+
+        if ($this->bookingRepository->hasOverlappingBooking($stylist, $start, $end)) {
+            throw SlotUnavailableException::create();
+        }
 
         $booking = new Booking(
             $this->uuidFactory->generate(),
