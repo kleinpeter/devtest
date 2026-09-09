@@ -33,6 +33,10 @@ final class CreateBookingCommandHandler
         $start = new DateTimeImmutable($command->startTime);
         $end   = $start->modify("+{$service->getDurationMinutes()} minutes");
 
+        if ($this->bookingRepository->hasOverlappingBooking($stylist, $start, $end)) {
+            throw new DomainException('This time slot is already booked.');
+        }
+
         $booking = new Booking(
             $this->uuidFactory->generate(),
             $service,
